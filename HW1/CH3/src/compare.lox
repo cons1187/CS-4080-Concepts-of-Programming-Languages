@@ -1,0 +1,8 @@
+var a;
+var b = "output";
+print a or b;
+
+print true and true;
+print true and false;
+print "true and false " + (true and false);
+print "!true " + (!true);
