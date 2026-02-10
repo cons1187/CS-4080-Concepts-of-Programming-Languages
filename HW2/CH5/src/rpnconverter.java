@@ -1,5 +1,3 @@
-package com.craftinginterpreters.lox;
-
 class RpnPrinter implements Expr.Visitor<String> {
 
     String print(Expr expr) {

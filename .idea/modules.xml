@@ -5,10 +5,11 @@
       <module fileurl="file://$PROJECT_DIR$/HW1/CH1/CH1.iml" filepath="$PROJECT_DIR$/HW1/CH1/CH1.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW1/CH2/CH2.iml" filepath="$PROJECT_DIR$/HW1/CH2/CH2.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW1/CH3/CH3.iml" filepath="$PROJECT_DIR$/HW1/CH3/CH3.iml" />
-      <module fileurl="file://$PROJECT_DIR$/HW1/CH4/CH4.iml" filepath="$PROJECT_DIR$/HW1/CH4/CH4.iml" />
-      <module fileurl="file://$PROJECT_DIR$/HW1/CH5/CH5.iml" filepath="$PROJECT_DIR$/HW1/CH5/CH5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW2/CH4/CH4.iml" filepath="$PROJECT_DIR$/HW2/CH4/CH4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW2/CH5/CH5.iml" filepath="$PROJECT_DIR$/HW2/CH5/CH5.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/CS-4080-Concepts-of-Programming-Languages.iml" filepath="$PROJECT_DIR$/.idea/CS-4080-Concepts-of-Programming-Languages.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW1/HW1.iml" filepath="$PROJECT_DIR$/HW1/HW1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW2/HW2.iml" filepath="$PROJECT_DIR$/HW2/HW2.iml" />
     </modules>
   </component>
 </project>
