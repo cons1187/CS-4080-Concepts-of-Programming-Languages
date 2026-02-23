@@ -1,0 +1,19 @@
+class True {
+  ifTrue(thenFn, elseFn) {
+    return thenFn();
+  }
+}
+
+class False {
+  ifTrue(thenFn, elseFn) {
+    return elseFn();
+  }
+}
+
+var trueVal = True();
+var falseVal = False();
+
+condition.ifTrue(
+  fun() { print "then branch"; },
+  fun() { print "else branch"; }
+);
