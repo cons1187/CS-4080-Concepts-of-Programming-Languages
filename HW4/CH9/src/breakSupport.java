@@ -111,6 +111,12 @@ public Void visitBreakStmt(Stmt.Break stmt) {
     return null;
 }
 
+//Add visitBreakStmt() method in AstPrinter.java
+@Override
+public String visitBreakStmt(Stmt.Break stmt) {
+    return "break";
+}
+
 //Add error handling in Interpreter.java
 private static class BreakException extends RuntimeException {}
 
