@@ -5,6 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/HW1/CH1/CH1.iml" filepath="$PROJECT_DIR$/HW1/CH1/CH1.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW5/CH10/CH10.iml" filepath="$PROJECT_DIR$/HW5/CH10/CH10.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW5/CH11/CH11.iml" filepath="$PROJECT_DIR$/HW5/CH11/CH11.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW6/CH12/CH12.iml" filepath="$PROJECT_DIR$/HW6/CH12/CH12.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW6/CH13/CH13.iml" filepath="$PROJECT_DIR$/HW6/CH13/CH13.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW1/CH2/CH2.iml" filepath="$PROJECT_DIR$/HW1/CH2/CH2.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW1/CH3/CH3.iml" filepath="$PROJECT_DIR$/HW1/CH3/CH3.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW2/CH4/CH4.iml" filepath="$PROJECT_DIR$/HW2/CH4/CH4.iml" />
@@ -19,6 +21,7 @@
       <module fileurl="file://$PROJECT_DIR$/HW3/HW3.iml" filepath="$PROJECT_DIR$/HW3/HW3.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW4/HW4.iml" filepath="$PROJECT_DIR$/HW4/HW4.iml" />
       <module fileurl="file://$PROJECT_DIR$/HW5/HW5.iml" filepath="$PROJECT_DIR$/HW5/HW5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HW6/HW6.iml" filepath="$PROJECT_DIR$/HW6/HW6.iml" />
     </modules>
   </component>
 </project>
