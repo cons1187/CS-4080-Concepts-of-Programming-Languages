@@ -1,0 +1,33 @@
+fun makeVector(x, y) {
+  fun getX() {
+    return x;
+  }
+  fun getY() {
+    return y;
+  }
+
+  fun add(other) {
+    return makeVector(x + other("x"), y + other("y"));
+  }
+
+  fun dispatch(method) {
+    if (method == "x")   return getX();
+    if (method == "y")   return getY();
+    if (method == "add") return add;
+    print "Unknown method: " + method;
+  }
+
+  return dispatch;
+}
+
+var vector1 = makeVector(1, 2);
+var vector2 = makeVector(3, 4);
+
+print vector1("x");   // 1
+print vector1("y");   // 2
+print vector2("x");   // 3
+print vector2("y");   // 4
+
+var added = v1("add")(v2);
+print added("x");   // 4
+print added("y");   // 6
