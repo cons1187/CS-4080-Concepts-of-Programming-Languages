@@ -17,67 +17,108 @@ static Obj* allocateObject(size_t size, ObjType type) {
   return object;
 }
 
-//in vm.h add new method declarations
-void incrementRef(Obj* object);
-void decrementRef(Obj* object);
+//declare reference counting functions in memory.h
+void incRef(Obj* value);
+void decRef(Obj* value);
 
-//implement them in vm.c
-void incrementRef(Obj* object) {
-  if (object == NULL) return;
-  object->refCount++;
+//implement functions in memory.c
+void incRef(Obj* value) {
+    value->refCount++;
 }
 
-void decrementRef(Obj* object) {
-  if (object == NULL) return;
-  object->refCount--;
-  if (object->refCount <= 0) {
-    freeObject(object);
-  }
+void decRef(Obj* value) {
+    if (value->refCount > 1) {
+        value->refCount--;
+    } else {
+        // Decrement refVal of objects referenced by the current object
+        switch (value->type) {
+            case OBJ_FUNCTION: {
+                ObjFunction* function = (ObjFunction*)value;
+                if (function->name != NULL) decRef((Obj*)function->name);
+                decrementArray(&function->chunk.constants);
+                break;
+            }
+            case OBJ_UPVALUE: {
+                ObjUpvalue* upvalue = (ObjUpvalue*)value;
+                decrementValue(upvalue->closed);
+                break;
+            }
+            case OBJ_CLOSURE: {
+                ObjClosure* closure = (ObjClosure*)value;
+                decRef((Obj*)closure->function);
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    decRef((Obj*)closure->upvalues[i]);
+                }
+                break;
+            }
+            case OBJ_NATIVE:
+            case OBJ_STRING:
+                break;
+        }
+    }
 }
 
-//add reference calls to various places in vm.c
+//helper functions for decrementing
+static void decrementValue(Value value) {
+    if (IS_OBJ(value)) decRef(AS_OBJ(value));
+}
+
+static void decrementArray(ValueArray* value_array) {
+    for (int i = 0; i < value_array->count; i++) {
+        decrementValue(value_array->values[i]);
+    }
+}
+
+//edit sweep method
+static void sweep() {
+    Obj* previous = NULL;
+    Obj* object = vm.objects;
+    while (object != NULL) {
+        // Changing sweep to free refCounts of 0
+        if (object->refCount > 0) {
+            previous = object;
+            object = object->next;
+
+//in compiler.c add function referencing
+static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->function = newFunction();
+    // This function is referenced by the compiler
+    incRef((Obj*) compiler->function);
+
+static ObjFunction* endCompiler() {
+    current = current->enclosing;
+    // Function no longer referenced by the compiler
+    decRef((Obj*)function);
+    return function;
+}
+
+//in table.c manage references for global variables
+bool tableSet(Table* table, ObjString* key, Value value) {
+    // Increase reference when assigning to global variable
+    if (IS_OBJ(value)) incRef(AS_OBJ(value));
+
+    // If entry exists, decrement the reference value of the object stored
+    if (!isNewKey && IS_OBJ(entry->value)) decRef(AS_OBJ(entry->value));
+
+//in vm.c edit push, pop, and upvalue captures with references
+// Pushes trigger a reference count increase
 void push(Value value) {
-  if (IS_OBJ(value)) incrementRef(AS_OBJ(value));
-  *vm.stackTop = value;
-  vm.stackTop++;
+    if (IS_OBJ(value)) incRef(AS_OBJ(value));
+    *vm.stackTop = value;
+    vm.stackTop++;
 }
 
+// Pops trigger a reference count decrease
 Value pop() {
-  vm.stackTop--;
-  Value value = *vm.stackTop;
-  if (IS_OBJ(value)) decrementRef(AS_OBJ(value));
-  return value;
+    if (IS_OBJ(*vm.stackTop)) decRef(AS_OBJ(*vm.stackTop));
+    vm.stackTop--;
+    return *vm.stackTop;
 }
 
-//inside run function
-case OP_DEFINE_GLOBAL: {
-  ObjString* name = READ_STRING();
-  Value value = peek(0);
-  //decrement old value if redefining
-  Value oldValue;
-  if (tableGet(&vm.globals, name, &oldValue)) {
-    if (IS_OBJ(oldValue)) decrementRef(AS_OBJ(oldValue));
-  }
-  //increment new value
-  if (IS_OBJ(value)) incrementRef(AS_OBJ(value));
-  tableSet(&vm.globals, name, value);
-  pop();
-  break;
-}
-
-case OP_SET_GLOBAL: {
-  ObjString* name = READ_STRING();
-  Value value = peek(0);
-  //decrement old value
-  Value oldValue;
-  if (tableGet(&vm.globals, name, &oldValue)) {
-    if (IS_OBJ(oldValue)) decrementRef(AS_OBJ(oldValue));
-  } else {
-    runtimeError("Undefined variable '%s'.", name->chars);
-    return INTERPRET_RUNTIME_ERROR;
-  }
-  //increment new value
-  if (IS_OBJ(value)) incrementRef(AS_OBJ(value));
-  tableSet(&vm.globals, name, value);
-  break;
-}
+static ObjUpvalue* captureUpvalue(Value* local) {
+    // Upvalue is referenced immediately, so refCount is updated
+    ObjUpvalue* createdUpvalue = newUpvalue(local);
+    incRef((Obj*)createdUpvalue);
+    // Increment the reference count of the local if it is an object
+    if (IS_OBJ(*local)) incRef(AS_OBJ(*local));
+    createdUpvalue->next = upvalue;
