@@ -30,7 +30,6 @@ void decRef(Obj* value) {
     if (value->refCount > 1) {
         value->refCount--;
     } else {
-        // Decrement refVal of objects referenced by the current object
         switch (value->type) {
             case OBJ_FUNCTION: {
                 ObjFunction* function = (ObjFunction*)value;
@@ -74,7 +73,6 @@ static void sweep() {
     Obj* previous = NULL;
     Obj* object = vm.objects;
     while (object != NULL) {
-        // Changing sweep to free refCounts of 0
         if (object->refCount > 0) {
             previous = object;
             object = object->next;
@@ -82,33 +80,27 @@ static void sweep() {
 //in compiler.c add function referencing
 static void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->function = newFunction();
-    // This function is referenced by the compiler
     incRef((Obj*) compiler->function);
 
 static ObjFunction* endCompiler() {
     current = current->enclosing;
-    // Function no longer referenced by the compiler
     decRef((Obj*)function);
     return function;
 }
 
 //in table.c manage references for global variables
 bool tableSet(Table* table, ObjString* key, Value value) {
-    // Increase reference when assigning to global variable
     if (IS_OBJ(value)) incRef(AS_OBJ(value));
-
-    // If entry exists, decrement the reference value of the object stored
     if (!isNewKey && IS_OBJ(entry->value)) decRef(AS_OBJ(entry->value));
+}
 
 //in vm.c edit push, pop, and upvalue captures with references
-// Pushes trigger a reference count increase
 void push(Value value) {
     if (IS_OBJ(value)) incRef(AS_OBJ(value));
     *vm.stackTop = value;
     vm.stackTop++;
 }
 
-// Pops trigger a reference count decrease
 Value pop() {
     if (IS_OBJ(*vm.stackTop)) decRef(AS_OBJ(*vm.stackTop));
     vm.stackTop--;
@@ -116,9 +108,8 @@ Value pop() {
 }
 
 static ObjUpvalue* captureUpvalue(Value* local) {
-    // Upvalue is referenced immediately, so refCount is updated
     ObjUpvalue* createdUpvalue = newUpvalue(local);
     incRef((Obj*)createdUpvalue);
-    // Increment the reference count of the local if it is an object
     if (IS_OBJ(*local)) incRef(AS_OBJ(*local));
     createdUpvalue->next = upvalue;
+}
