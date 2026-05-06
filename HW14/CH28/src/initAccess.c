@@ -3,14 +3,14 @@ typedef struct {
   Obj obj;
   ObjString* name;
   Table methods;
-  ObjClosure* init;
+  Value init;
 } ObjClass;
 
 //initialize to Null in object.c newClass method
 ObjClass* newClass(ObjString* name) {
   ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
   klass->name = name;
-  klass->init = NULL;   // add this
+  klass->init = NIL_VAL;   // add this
   initTable(&klass->methods);
   return klass;
 }
@@ -21,7 +21,7 @@ static void defineMethod(ObjString* name) {
   ObjClass* klass = AS_CLASS(peek(1));
   tableSet(&klass->methods, name, method);
   if (name == vm.initString) {
-    klass->init = AS_CLOSURE(method);
+    klass->init = method;
   }
   pop();
 }
@@ -30,8 +30,8 @@ static void defineMethod(ObjString* name) {
 case OBJ_CLASS: {
   ObjClass* klass = AS_CLASS(callee);
   vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-  if (klass->init != NULL) {
-    return call(klass->init, argCount);
+  if (!IS_NIL(klass->init)) {
+    return call(AS_CLOSURE(klass->init), argCount);
   } else if (argCount != 0) {
     runtimeError("Expected 0 arguments but got %d.", argCount);
     return false;

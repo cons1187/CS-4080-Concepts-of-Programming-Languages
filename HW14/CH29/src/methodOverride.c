@@ -1,84 +1,79 @@
-//add TOKEN_INNER to enum in scanner.h
-
-//add identifier to scanner.c
-case 'i':
-  if (scanner.current - scanner.start > 1) {
-    switch (scanner.start[1]) {
-      case 'f': return TOKEN_IF;
-      case 'n': return checkKeyword(2, 3, "ner", TOKEN_INNER);
-    }
-  }
-  break;
-
-//add new OP_INNER opcode in chunk.h
-
-//add new disassembly case in debug.c
-case OP_INNER:
-  return simpleInstruction("OP_INNER", offset);
-
-//edit ObjClosure struct in object.h
-typedef struct ObjClosure {
-  Obj obj;
-  ObjFunction* function;
-  ObjUpvalue** upvalues;
-  int upvalueCount;
-  struct ObjClosure* inner;  // next method down chain, NULL if none
+//add new fields in object.h structs
+struct ObjClass;
+typedef struct {
+    Obj obj;
+    ObjFunction* function;
+    ObjUpvalue** upvalues;
+    int upvalueCount;
+    struct ObjClass* owner;  //new
 } ObjClosure;
 
-//in object.c add to newClosure method
-closure->inner = NULL;
-
-//in memory.c add to OBJ_Closure case
-markObject((Obj*)closure->inner);
-
-//add inner to parse table in compiler.c
-[TOKEN_INNER] = {inner, NULL, PREC_NONE},
-
-//also add new parse function\
-static void inner(bool canAssign) {
-  if (currentClass == NULL) {
-    error("Can't use 'inner' outside of a class.");
-    return;
-  }
-  uint8_t argCount = argumentList();
-  emitBytes(OP_INNER, argCount);
-}
-
-//since super is not usable replace body of method
-static void super_(bool canAssign) {
-  error("'super' is not supported. Use 'inner' instead.");
-}
+typedef struct ObjClass {
+    Obj obj;
+    ObjString* name;
+    Table methods;
+    Table ownMethods;        //new
+    struct ObjClass* superclass;
+} ObjClass;
 
 //in vm.c edit defineMethod
 static void defineMethod(ObjString* name) {
-  ObjClosure* newMethod = AS_CLOSURE(peek(0));
-  ObjClass* klass = AS_CLASS(peek(1));
+    Value method = peek(0);
+    ObjClass* klass = AS_CLASS(peek(1));
+    ObjClosure* closure = AS_CLOSURE(method);
+    closure->owner = klass;
 
-  Value existing;
-  if (tableGet(&klass->methods, name, &existing)) {
-    ObjClosure* cursor = AS_CLOSURE(existing);
-    while (cursor->inner != NULL) {
-      cursor = cursor->inner;
+    tableSet(&klass->ownMethods, name, method);
+
+    Value existing;
+    if (!tableGet(&klass->methods, name, &existing)) {
+        tableSet(&klass->methods, name, method);
     }
-    cursor->inner = newMethod;
-  } else {
-    tableSet(&klass->methods, name, OBJ_VAL(newMethod));
-  }
-  pop();
+    pop();
 }
 
-//add OP_INNER handling in dispatch
+//add op_inner case in vm.c
 case OP_INNER: {
-  int argCount = READ_BYTE();
-  ObjClosure* current = frame->closure;
-  if (current->inner == NULL) {
-    vm.stackTop -= argCount;
-    push(NIL_VAL);
-    break;
-  }
-  if (!call(current->inner, argCount)) {
-    return INTERPRET_RUNTIME_ERROR;
-  }
-  frame = &vm.frames[vm.frameCount - 1];
-  break;
+    ObjString* name = AS_STRING(READ_STRING());
+    int argCount = READ_BYTE();
+    ObjClass* own = frame->closure->owner;
+    ObjInstance* instance = AS_INSTANCE(peek(argCount));
+    ObjClass* path[64];
+    int pathLen = 0;
+    for (ObjClass* k = instance->klass; k != NULL && k != own && pathLen < 64;
+         k = k->superclass) {
+        path[pathLen++] = k;
+    }
+    Value method;
+    bool found = false;
+    bool fnd = false;
+    for (int i = pathLen - 1; i >= 0; i--) {
+        if (tableGet(&path[i]->ownMethods, name, &method)) { found = true; break; }
+    }
+    if (!found) {
+        vm.stackTop -= argCount;
+        *(vm.stackTop - 1) = NIL_VAL;
+    }
+    STORE_FRAME();
+    if (!callAS_CLOSURE(method), argCount)) return INTERPRET_RUNTIME_ERROR;
+    LOAD_FRAME();
+}
+
+//in compiler.c add inner_ handler method
+static void inner_(bool canAssign) {
+    (void)canAssign;
+    if (currentClass == NULL ||
+        (current->type != TYPE_METHOD && current->type != TYPE_INITIALIZER)) {
+        error("Can't use 'inner' outside of a method.");
+        return;
+    }
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'inner'.");
+    emitBytes(OP_GET_LOCAL, 0);
+    uint8_t argCount = argumentList();
+
+    ObjString* name = current->function->name;
+    uint8_t nameConst = makeConstant(OBJ_VAL(name));
+    emitBytes(OP_INNER, nameConst);
+    emitByte(argCount);
 }
